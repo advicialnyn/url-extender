@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form 27-B — URL Extension Bureau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E8DFC4;
+    --paper-dark:#DCD2AF;
+    --ink:#2A2420;
+    --stamp:#A6392B;
+    --ledger:#4B5842;
+    --amber:#C89B3C;
+    --line:#B3A47C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 3px);
+    color:var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 60px;
+    line-height:1.5;
+  }
+  #app{width:100%;max-width:560px;}
+  .sheet{
+    background:var(--paper-dark);
+    border:2px solid var(--ink);
+    box-shadow:6px 6px 0 rgba(42,36,32,0.25);
+    position:relative;
+  }
+  .letterhead{
+    padding:20px 20px 16px;
+    border-bottom:2px dashed var(--line);
+    position:relative;
+  }
+  .bureau{
+    font-size:11px;
+    letter-spacing:0.5px;
+    color:var(--ledger);
+    margin:0 0 6px;
+  }
+  h1{
+    font-size:18px;
+    margin:0 0 4px;
+    font-weight:700;
+    line-height:1.3;
+  }
+  .subtitle{
+    font-size:12px;
+    color:#5a5044;
+    margin:0;
+  }
+  .stamp{
+    position:absolute;
+    top:14px;
+    right:16px;
+    border:3px double var(--stamp);
+    color:var(--stamp);
+    font-weight:700;
+    font-size:10.5px;
+    padding:5px 8px;
+    transform:rotate(6deg);
+    letter-spacing:0.5px;
+    background:rgba(166,57,43,0.05);
+  }
+  .section{
+    padding:18px 20px;
+    border-bottom:2px dashed var(--line);
+  }
+  .section:last-child{border-bottom:none;}
+  label.field-label{
+    display:block;
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--ledger);
+    margin-bottom:6px;
+  }
+  input[type=text], input[type=number]{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    padding:10px 10px;
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+  }
+  input[type=text]:focus, input[type=number]:focus{
+    outline:2px solid var(--amber);
+    outline-offset:1px;
+  }
+  .procedure{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .procedure:last-child{border-bottom:none;}
+  .procedure input[type=radio]{
+    appearance:none;
+    -webkit-appearance:none;
+    width:18px;height:18px;
+    min-width:18px;
+    border:1.5px solid var(--ink);
+    background:var(--paper);
+    margin-top:2px;
+    display:grid;
+    place-content:center;
+    cursor:pointer;
+  }
+  .procedure input[type=radio]::before{
+    content:"";
+    width:10px;height:10px;
+    transform:scale(0);
+    background:var(--stamp);
+  }
+  .procedure input[type=radio]:checked::before{transform:scale(1);}
+  .code{
+    font-weight:700;
+    color:var(--stamp);
+    margin-right:4px;
+  }
+  .proc-name{font-weight:600;font-size:13.5px;}
+  .proc-desc{font-size:12px;color:#5a5044;margin-top:2px;}
+  .sub-options{
+    margin:8px 0 0 28px;
+    padding:10px;
+    border:1px dashed var(--line);
+    background:rgba(0,0,0,0.02);
+    display:none;
+  }
+  .sub-options.active{display:block;}
+  .sub-options label{font-size:11px;color:var(--ledger);display:block;margin-bottom:4px;}
+  button{
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.5px;
+    padding:12px 16px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    cursor:pointer;
+    width:100%;
+  }
+  button:active{transform:translateY(1px);}
+  button.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1.5px solid var(--ink);
+    width:auto;
+    padding:8px 12px;
+    font-size:12px;
+    margin-top:8px;
+  }
+  .error-box{
+    border:1.5px solid var(--stamp);
+    color:var(--stamp);
+    font-size:12px;
+    font-weight:600;
+    padding:8px 10px;
+    margin-bottom:10px;
+    display:none;
+  }
+  .result{
+    display:none;
+  }
+  .result.active{display:block;}
+  textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:12px;
+    padding:10px;
+    border:1.5px solid var(--ink);
+    background:var(--paper);
+    resize:vertical;
+    min-height:90px;
+    word-break:break-all;
+  }
+  .stats{
+    font-size:11.5px;
+    color:var(--ledger);
+    margin-top:8px;
+    line-height:1.6;
+  }
+  .stats b{color:var(--ink);}
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:#6b6152;
+    margin-top:16px;
+    padding:0 10px;
+  }
+  /* Processing view */
+  #processView{
+    background:var(--paper-dark);
+    border:2px solid var(--ink);
+    box-shadow:6px 6px 0 rgba(42,36,32,0.25);
+    padding:40px 24px;
+    text-align:center;
+  }
+  #processView .code-line{
+    font-size:12px;
+    color:var(--ledger);
+    margin-bottom:14px;
+  }
+  #processView .msg{
+    font-size:15px;
+    font-weight:600;
+    min-height:44px;
+    margin-bottom:20px;
+  }
+  .bar-track{
+    width:100%;
+    height:10px;
+    border:1.5px solid var(--ink);
+    background:var(--paper);
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--stamp);
+    width:0%;
+    transition:width 0.5s ease;
+  }
+  .hop-count{font-size:11px;color:#5a5044;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="formView">
+    <div class="sheet">
+      <div class="letterhead">
+        <div class="stamp">APPROVED<br>FOR PROCESSING</div>
+        <p class="bureau">BUREAU OF REDUNDANT REDIRECTION · EST. 2026</p>
+        <h1>Form 27-B — Application for URL Length Extension</h1>
+        <p class="subtitle">Submit a link below for mandatory lengthening review.</p>
+      </div>
+
+      <div class="section">
+        <label class="field-label" for="targetUrl">01. ORIGINAL URL (attach in full)</label>
+        <input type="text" id="targetUrl" placeholder="https://example.com/page">
+      </div>
+
+      <div class="section">
+        <label class="field-label">02. SELECT EXTENSION PROCEDURE (choose one)</label>
+
+        <label class="procedure">
+          <input type="radio" name="mode" value="troll" checked>
+          <span>
+            <span><span class="code">04</span><span class="proc-name">Redirect Relay (Comedic)</span></span>
+            <div class="proc-desc">Pads the link with fake tracking junk and a single joke checkpoint before delivery.</div>
+          </span>
+        </label>
+
+        <label class="procedure">
+          <input type="radio" name="mode" value="desc">
+          <span>
+            <span><span class="code">11</span><span class="proc-name">Descriptive Padding</span></span>
+            <div class="proc-desc">Appends a long, absurdly specific human-readable description of the destination.</div>
+          </span>
+        </label>
+
+        <label class="procedure">
+          <input type="radio" name="mode" value="chain">
+          <span>
+            <span><span class="code">22</span><span class="proc-name">Chain of Custody</span></span>
+            <div class="proc-desc">Routes the visitor through several intermediate hops before final delivery.</div>
+          </span>
+          <div class="sub-options" id="chainOpts">
+            <label for="hopCount">NUMBER OF HOPS (2–12)</label>
+            <input type="number" id="hopCount" min="2" max="12" value="6">
+          </div>
+        </label>
+
+        <label class="procedure">
+          <input type="radio" name="mode" value="max">
+          <span>
+            <span><span class="code">99</span><span class="proc-name">Maximum Verbosity</span></span>
+            <div class="proc-desc">Attaches the maximum permissible amount of meaningless payload.</div>
+          </span>
+          <div class="sub-options" id="maxOpts">
+            <label for="junkLen">PAYLOAD SIZE IN CHARACTERS (200–3000)</label>
+            <input type="number" id="junkLen" min="200" max="3000" value="1500">
+          </div>
+        </label>
+      </div>
+
+      <div class="section">
+        <div class="error-box" id="errorBox"></div>
+        <button id="submitBtn" type="button">PROCESS APPLICATION</button>
+
+        <div class="result" id="resultBox">
+          <label class="field-label" style="margin-top:16px;">RESULT — EXTENDED URL ISSUED</label>
+          <textarea id="resultText" readonly></textarea>
+          <button class="secondary" id="copyBtn" type="button">COPY TO CLIPBOARD</button>
+          <div class="stats" id="statsBox"></div>
+        </div>
+      </div>
+    </div>
+    <footer>This form adds no real value. That is the point.</footer>
+  </div>
+
+  <div id="processView" hidden>
+    <div class="code-line" id="procCode">PROCESSING...</div>
+    <div class="msg" id="procMsg">Please wait.</div>
+    <div class="bar-track"><div class="bar-fill" id="procBar"></div></div>
+    <div class="hop-count" id="procHopCount"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  function base() { return location.origin + location.pathname; }
+
+  function b64e(str){ return btoa(unescape(encodeURIComponent(str))); }
+  function b64d(str){ return decodeURIComponent(escape(atob(str))); }
+
+  function normalizeUrl(u){
+    u = u.trim();
+    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  function randomHex(len){
+    var chars = 'abcdef0123456789';
+    var out = '';
+    for(var i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+
+  function randomJunk(len){
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var out = '';
+    for(var i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+
+  var slugPrefixes = ['click-here-to-see','you-wont-believe','breaking-news','read-before-you-regret-it','presenting','attention-please'];
+  var slugAdjectives = ['legendary','shocking','wholesome','forbidden','ancient','unnecessarily-long','mildly-concerning','deeply-questionable','bureaucratically-approved'];
+  var slugSubjects = ['guide-to','article-about','deep-dive-into','investigation-of','tribute-to','manifesto-on','saga-of'];
+  var slugTopics = ['cats-doing-backflips','the-history-of-paperwork','why-this-link-is-so-long','municipal-drainage-systems','forgotten-office-supplies','the-quest-for-brevity','19th-century-bureaucracy','a-very-important-meeting'];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function buildDescriptiveSlug(){
+    return pick(slugPrefixes) + '/' + pick(slugAdjectives) + '-' + pick(slugSubjects) + '/' + pick(slugTopics);
+  }
+
+  var trollMessages = [
+    'Verifying this link is not a scam (it might still be)...',
+    'Injecting mandatory tracking pixels...',
+    'Consulting the algorithm for permission...',
+    'Contacting shareholders...',
+    'Optimizing for maximum inconvenience...',
+    'Politely asking you to disable your ad blocker...',
+    'Checking if you have accepted all 46 cookie categories...'
+  ];
+
+  var chainMessages = [
+    'Verifying credentials at this node...',
+    'Stamping in triplicate...',
+    'Escalating to the next department...',
+    'Filing a copy for the archive...',
+    'Waiting for supervisor approval...',
+    'Rerouting through an unrelated office...',
+    'Double-checking the paperwork...',
+    'Photocopying the request...'
+  ];
+
+  // ---------- FORM VIEW ----------
+  function initForm(){
+    var radios = document.querySelectorAll('input[name=mode]');
+    function syncSubOptions(){
+      document.getElementById('chainOpts').classList.toggle('active', getMode()==='chain');
+      document.getElementById('maxOpts').classList.toggle('active', getMode()==='max');
+    }
+    function getMode(){
+      var checked = document.querySelector('input[name=mode]:checked');
+      return checked ? checked.value : 'troll';
+    }
+    radios.forEach(function(r){ r.addEventListener('change', syncSubOptions); });
+    syncSubOptions();
+
+    document.getElementById('submitBtn').addEventListener('click', function(){
+      var errorBox = document.getElementById('errorBox');
+      var resultBox = document.getElementById('resultBox');
+      errorBox.style.display = 'none';
+      resultBox.classList.remove('active');
+
+      var raw = document.getElementById('targetUrl').value;
+      if(!raw.trim()){
+        errorBox.textContent = 'REJECTED — FIELD 01 IS REQUIRED';
+        errorBox.style.display = 'block';
+        return;
+      }
+      var target = normalizeUrl(raw);
+      var mode = getMode();
+      var params = new URLSearchParams();
+      params.set('mode', mode);
+      params.set('t', b64e(target));
+      var hashSuffix = '';
+
+      if(mode === 'troll'){
+        params.set('utm_source', 'definitely_not_spam');
+        params.set('utm_medium', 'trust_me_bro');
+        params.set('ref', 'friend_recommendation');
+        params.set('fbclid', randomHex(16));
+        params.set('session', randomHex(24));
+      } else if(mode === 'desc'){
+        hashSuffix = '#/' + buildDescriptiveSlug();
+      } else if(mode === 'chain'){
+        var hops = parseInt(document.getElementById('hopCount').value, 10) || 6;
+        hops = Math.max(2, Math.min(12, hops));
+        params.set('hops', hops);
+        params.set('total', hops);
+      } else if(mode === 'max'){
+        var len = parseInt(document.getElementById('junkLen').value, 10) || 1500;
+        len = Math.max(200, Math.min(3000, len));
+        params.set('junk', randomJunk(len));
+      }
+
+      var finalUrl = base() + '?' + params.toString() + hashSuffix;
+      document.getElementById('resultText').value = finalUrl;
+
+      var pct = Math.round(((finalUrl.length - target.length) / target.length) * 100);
+      document.getElementById('statsBox').innerHTML =
+        'ORIGINAL LENGTH: <b>' + target.length + ' chars</b><br>' +
+        'EXTENDED LENGTH: <b>' + finalUrl.length + ' chars</b><br>' +
+        'INCREASE: <b>+' + pct + '%</b> — APPROVED';
+
+      resultBox.classList.add('active');
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function(){
+      var text = document.getElementById('resultText').value;
+      var btn = this;
+      function done(){ btn.textContent = 'COPIED ✓'; setTimeout(function(){btn.textContent='COPY TO CLIPBOARD';}, 1500); }
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(text).then(done).catch(function(){
+          document.getElementById('resultText').select();
+          document.execCommand('copy');
+          done();
+        });
+      } else {
+        document.getElementById('resultText').select();
+        document.execCommand('copy');
+        done();
+      }
+    });
+  }
+
+  // ---------- PROCESSING VIEW ----------
+  function initProcessing(params){
+    document.getElementById('formView').hidden = true;
+    var pv = document.getElementById('processView');
+    pv.hidden = false;
+
+    var mode = params.get('mode');
+    var target = b64d(params.get('t'));
+    var msgEl = document.getElementById('procMsg');
+    var codeEl = document.getElementById('procCode');
+    var barEl = document.getElementById('procBar');
+    var hopEl = document.getElementById('procHopCount');
+
+    function go(url, delay){
+      setTimeout(function(){ location.replace(url); }, delay);
+    }
+
+    if(mode === 'troll'){
+      codeEl.textContent = 'PROCEDURE 04 — REDIRECT RELAY';
+      msgEl.textContent = pick(trollMessages);
+      barEl.style.width = '100%';
+      go(target, 1600);
+
+    } else if(mode === 'desc'){
+      codeEl.textContent = 'PROCEDURE 11 — DESCRIPTIVE PADDING';
+      msgEl.textContent = 'Compiling descriptive redirect...';
+      barEl.style.width = '100%';
+      go(target, 900);
+
+    } else if(mode === 'max'){
+      codeEl.textContent = 'PROCEDURE 99 — MAXIMUM VERBOSITY';
+      var junkLen = (params.get('junk') || '').length;
+      msgEl.textContent = 'Verifying payload compliance (' + junkLen + ' bytes)...';
+      barEl.style.width = '100%';
+      go(target, 1200);
+
+    } else if(mode === 'chain'){
+      var hops = parseInt(params.get('hops'), 10);
+      var total = parseInt(params.get('total'), 10) || hops;
+      codeEl.textContent = 'PROCEDURE 22 — CHAIN OF CUSTODY';
+      msgEl.textContent = pick(chainMessages);
+      hopEl.textContent = 'NODE ' + (total - hops + 1) + ' OF ' + total;
+      var pct = Math.round(((total - hops) / total) * 100);
+      barEl.style.width = pct + '%';
+
+      go(function(){
+        if(hops <= 1){
+          return target;
+        }
+        var next = new URLSearchParams();
+        next.set('mode', 'chain');
+        next.set('t', b64e(target));
+        next.set('hops', hops - 1);
+        next.set('total', total);
+        return base() + '?' + next.toString();
+      }(), 1100);
+
+    } else {
+      // unknown mode, just bounce home
+      go(base(), 300);
+    }
+  }
+
+  // ---------- ENTRY ----------
+  var params = new URLSearchParams(location.search);
+  if(params.get('mode') && params.get('t')){
+    initProcessing(params);
+  } else {
+    initForm();
+  }
+
+})();
+</script>
+</body>
+</html>
