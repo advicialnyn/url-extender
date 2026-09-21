@@ -421,8 +421,12 @@
         params.set('ref', 'friend_recommendation');
         params.set('fbclid', randomHex(16));
         params.set('session', randomHex(24));
+        params.set('hops', 4);
+        params.set('total', 4);
       } else if(mode === 'desc'){
         hashSuffix = '#/' + buildDescriptiveSlug();
+        params.set('hops', 2);
+        params.set('total', 2);
       } else if(mode === 'chain'){
         var hops = parseInt(document.getElementById('hopCount').value, 10) || 6;
         hops = Math.max(2, Math.min(12, hops));
@@ -432,6 +436,8 @@
         var len = parseInt(document.getElementById('junkLen').value, 10) || 1500;
         len = Math.max(200, Math.min(3000, len));
         params.set('junk', randomJunk(len));
+        params.set('hops', 2);
+        params.set('total', 2);
       }
 
       var finalUrl = base() + '?' + params.toString() + hashSuffix;
@@ -465,66 +471,49 @@
   }
 
   // ---------- PROCESSING VIEW ----------
+  var modeInfo = {
+    troll: { label: 'PROCEDURE 04 — REDIRECT RELAY', messages: trollMessages, delay: 900 },
+    desc:  { label: 'PROCEDURE 11 — DESCRIPTIVE PADDING', messages: ['Compiling descriptive redirect...', 'Formatting destination path...', 'Cross-referencing the slug registry...'], delay: 800 },
+    chain: { label: 'PROCEDURE 22 — CHAIN OF CUSTODY', messages: chainMessages, delay: 1000 },
+    max:   { label: 'PROCEDURE 99 — MAXIMUM VERBOSITY', messages: ['Verifying payload compliance...', 'Compressing meaningless data...', 'Auditing the padding...'], delay: 800 }
+  };
+
   function initProcessing(params){
     document.getElementById('formView').hidden = true;
-    var pv = document.getElementById('processView');
-    pv.hidden = false;
+    document.getElementById('processView').hidden = false;
 
     var mode = params.get('mode');
     var target = b64d(params.get('t'));
+    var info = modeInfo[mode] || modeInfo.troll;
+
+    var hops = parseInt(params.get('hops'), 10);
+    var total = parseInt(params.get('total'), 10);
+    if(isNaN(hops) || hops < 1) hops = 1;
+    if(isNaN(total) || total < 1) total = hops;
+
     var msgEl = document.getElementById('procMsg');
     var codeEl = document.getElementById('procCode');
     var barEl = document.getElementById('procBar');
     var hopEl = document.getElementById('procHopCount');
 
-    function go(url, delay){
-      setTimeout(function(){ location.replace(url); }, delay);
-    }
+    codeEl.textContent = info.label;
+    msgEl.textContent = pick(info.messages);
+    hopEl.textContent = 'NODE ' + (total - hops + 1) + ' OF ' + total;
+    var pct = Math.round(((total - hops) / total) * 100);
+    barEl.style.width = pct + '%';
 
-    if(mode === 'troll'){
-      codeEl.textContent = 'PROCEDURE 04 — REDIRECT RELAY';
-      msgEl.textContent = pick(trollMessages);
-      barEl.style.width = '100%';
-      go(target, 1600);
-
-    } else if(mode === 'desc'){
-      codeEl.textContent = 'PROCEDURE 11 — DESCRIPTIVE PADDING';
-      msgEl.textContent = 'Compiling descriptive redirect...';
-      barEl.style.width = '100%';
-      go(target, 900);
-
-    } else if(mode === 'max'){
-      codeEl.textContent = 'PROCEDURE 99 — MAXIMUM VERBOSITY';
-      var junkLen = (params.get('junk') || '').length;
-      msgEl.textContent = 'Verifying payload compliance (' + junkLen + ' bytes)...';
-      barEl.style.width = '100%';
-      go(target, 1200);
-
-    } else if(mode === 'chain'){
-      var hops = parseInt(params.get('hops'), 10);
-      var total = parseInt(params.get('total'), 10) || hops;
-      codeEl.textContent = 'PROCEDURE 22 — CHAIN OF CUSTODY';
-      msgEl.textContent = pick(chainMessages);
-      hopEl.textContent = 'NODE ' + (total - hops + 1) + ' OF ' + total;
-      var pct = Math.round(((total - hops) / total) * 100);
-      barEl.style.width = pct + '%';
-
-      go(function(){
-        if(hops <= 1){
-          return target;
-        }
-        var next = new URLSearchParams();
-        next.set('mode', 'chain');
-        next.set('t', b64e(target));
-        next.set('hops', hops - 1);
-        next.set('total', total);
-        return base() + '?' + next.toString();
-      }(), 1100);
-
-    } else {
-      // unknown mode, just bounce home
-      go(base(), 300);
-    }
+    setTimeout(function(){
+      if(hops <= 1){
+        location.replace(target);
+        return;
+      }
+      var next = new URLSearchParams();
+      next.set('mode', mode);
+      next.set('t', b64e(target));
+      next.set('hops', hops - 1);
+      next.set('total', total);
+      location.replace(base() + '?' + next.toString());
+    }, info.delay);
   }
 
   // ---------- ENTRY ----------
