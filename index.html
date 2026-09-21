@@ -247,6 +247,7 @@
     z-index:50;
     overflow:hidden;
   }
+  #processView[hidden]{ display:none; }
   #processView::before{
     content:"";
     position:absolute; inset:0;
@@ -433,6 +434,7 @@
     <div class="msg" id="procMsg">wait.</div>
     <div class="bar-track"><div class="bar-fill" id="procBar"></div></div>
     <div class="hop-count" id="procHopCount"></div>
+    <a href="#" id="escapeHatch" style="display:none;color:var(--dim);font-size:10.5px;margin-top:22px;text-decoration:underline;position:relative;z-index:2;">stuck? start over</a>
   </div>
 
 </div>
@@ -444,6 +446,18 @@
 
   function b64e(str){ return btoa(unescape(encodeURIComponent(str))); }
   function b64d(str){ return decodeURIComponent(escape(atob(str))); }
+  function safeB64d(str){
+    try { return b64d(str); } catch(e){ return null; }
+  }
+
+  function fallbackToForm(){
+    try { history.replaceState(null, '', base()); } catch(e){}
+    var pv = document.getElementById('processView');
+    pv.hidden = true;
+    pv.classList.remove('glitching','crash');
+    document.getElementById('formView').hidden = false;
+    initForm();
+  }
 
   function normalizeUrl(u){
     u = u.trim();
@@ -607,8 +621,18 @@
     processView.classList.add('glitching');
     setTimeout(function(){ processView.classList.remove('glitching'); }, 460);
 
+    var escapeHatch = document.getElementById('escapeHatch');
+    escapeHatch.style.display = 'none';
+    escapeHatch.onclick = function(e){ e.preventDefault(); fallbackToForm(); };
+    var escapeTimer = setTimeout(function(){ escapeHatch.style.display = 'inline-block'; }, 6000);
+
     var mode = params.get('mode');
-    var target = b64d(params.get('t'));
+    var target = safeB64d(params.get('t'));
+    if(!target || !/^https?:\/\//i.test(target)){
+      clearTimeout(escapeTimer);
+      fallbackToForm();
+      return;
+    }
     var info = modeInfo[mode] || modeInfo.troll;
 
     var hops = parseInt(params.get('hops'), 10);
@@ -617,7 +641,7 @@
     if(isNaN(total) || total < 1) total = hops;
 
     var delay = parseInt(params.get('delay'), 10);
-    if(isNaN(delay)) delay = info.delay;
+    if(isNaN(delay) || delay < 200) delay = info.delay;
     var useHistory = params.get('hist') === '1';
 
     var msgEl = document.getElementById('procMsg');
@@ -642,25 +666,31 @@
     }
 
     setTimeout(function(){
-      if(hops <= 1){
-        goTo(target);
-        return;
+      clearTimeout(escapeTimer);
+      try {
+        if(hops <= 1){
+          goTo(target);
+          return;
+        }
+        var next = new URLSearchParams();
+        next.set('mode', mode);
+        next.set('t', b64e(target));
+        next.set('hops', hops - 1);
+        next.set('total', total);
+        next.set('delay', delay);
+        next.set('hist', useHistory ? 1 : 0);
+        goTo(base() + '?' + next.toString());
+      } catch(e){
+        fallbackToForm();
       }
-      var next = new URLSearchParams();
-      next.set('mode', mode);
-      next.set('t', b64e(target));
-      next.set('hops', hops - 1);
-      next.set('total', total);
-      next.set('delay', delay);
-      next.set('hist', useHistory ? 1 : 0);
-      goTo(base() + '?' + next.toString());
     }, delay);
   }
 
   // ---------- ENTRY ----------
   var params = new URLSearchParams(location.search);
   if(params.get('mode') && params.get('t')){
-    initProcessing(params);
+    try { initProcessing(params); }
+    catch(e){ fallbackToForm(); }
   } else {
     initForm();
   }
