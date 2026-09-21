@@ -235,6 +235,15 @@
     transition:width 0.5s ease;
   }
   .hop-count{font-size:11px;color:#5a5044;}
+  .spinner{
+    width:22px;height:22px;
+    margin:0 auto 16px;
+    border:3px solid var(--line);
+    border-top-color:var(--stamp);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -299,6 +308,19 @@
       </div>
 
       <div class="section">
+        <label class="field-label">03. HOP BEHAVIOR (applies to every procedure)</label>
+        <label for="hopDelay" style="display:block;font-size:11px;color:var(--ledger);margin-bottom:4px;">PAUSE PER HOP, IN MILLISECONDS (500–4000)</label>
+        <input type="number" id="hopDelay" min="500" max="4000" step="100" value="1200" style="margin-bottom:12px;">
+        <label class="procedure" style="border-bottom:none;padding-top:0;">
+          <input type="checkbox" id="useHistory" checked style="appearance:auto;width:16px;height:16px;margin-top:3px;">
+          <span>
+            <span class="proc-name">Keep every hop in browser history</span>
+            <div class="proc-desc">Each hop becomes its own visited page — the back button steps through them one by one, instead of skipping straight to where the visitor started.</div>
+          </span>
+        </label>
+      </div>
+
+      <div class="section">
         <div class="error-box" id="errorBox"></div>
         <button id="submitBtn" type="button">PROCESS APPLICATION</button>
 
@@ -314,6 +336,7 @@
   </div>
 
   <div id="processView" hidden>
+    <div class="spinner"></div>
     <div class="code-line" id="procCode">PROCESSING...</div>
     <div class="msg" id="procMsg">Please wait.</div>
     <div class="bar-track"><div class="bar-fill" id="procBar"></div></div>
@@ -410,9 +433,14 @@
       }
       var target = normalizeUrl(raw);
       var mode = getMode();
+      var hopDelay = parseInt(document.getElementById('hopDelay').value, 10) || 1200;
+      hopDelay = Math.max(500, Math.min(4000, hopDelay));
+      var useHistory = document.getElementById('useHistory').checked ? 1 : 0;
       var params = new URLSearchParams();
       params.set('mode', mode);
       params.set('t', b64e(target));
+      params.set('delay', hopDelay);
+      params.set('hist', useHistory);
       var hashSuffix = '';
 
       if(mode === 'troll'){
@@ -491,6 +519,10 @@
     if(isNaN(hops) || hops < 1) hops = 1;
     if(isNaN(total) || total < 1) total = hops;
 
+    var delay = parseInt(params.get('delay'), 10);
+    if(isNaN(delay)) delay = info.delay;
+    var useHistory = params.get('hist') === '1';
+
     var msgEl = document.getElementById('procMsg');
     var codeEl = document.getElementById('procCode');
     var barEl = document.getElementById('procBar');
@@ -502,9 +534,14 @@
     var pct = Math.round(((total - hops) / total) * 100);
     barEl.style.width = pct + '%';
 
+    function goTo(url){
+      if(useHistory){ location.href = url; }
+      else { location.replace(url); }
+    }
+
     setTimeout(function(){
       if(hops <= 1){
-        location.replace(target);
+        goTo(target);
         return;
       }
       var next = new URLSearchParams();
@@ -512,8 +549,10 @@
       next.set('t', b64e(target));
       next.set('hops', hops - 1);
       next.set('total', total);
-      location.replace(base() + '?' + next.toString());
-    }, info.delay);
+      next.set('delay', delay);
+      next.set('hist', useHistory ? 1 : 0);
+      goTo(base() + '?' + next.toString());
+    }, delay);
   }
 
   // ---------- ENTRY ----------
